@@ -257,7 +257,7 @@ def main() -> None:
             index=0,
         )
         if sampling_mode == "Fraction":
-            sample_fraction = st.slider("Sample fraction (ρ)", min_value=0.001, max_value=1.0, value=0.05, step=0.01)
+            sample_fraction = st.number_input("Sample fraction (ρ)", min_value=0.001, max_value=1.0, value=0.01, step=0.001, format="%.3f")
             fixed_sample_size = None
         else:
             sample_fraction = 1.0  # Will be overridden by fixed_sample_size
@@ -265,7 +265,7 @@ def main() -> None:
 
         st.markdown("---")
         st.header("Baselines")
-        include_sklearn = st.checkbox("Include sklearn MeanShift", value=False)
+        include_sklearn = st.checkbox("Include sklearn MeanShift", value=True)
         if include_sklearn:
             use_sams_bandwidth = st.checkbox("Use SAMS bandwidth for sklearn", value=False)
         else:
@@ -273,7 +273,7 @@ def main() -> None:
         include_custom = st.checkbox("Include custom MeanShift", value=True)
 
         st.markdown("---")
-        random_state = st.number_input("Random seed", min_value=0, max_value=9999, value=0, step=1)
+        random_state = st.number_input("Random seed", min_value=0, max_value=9999, value=42, step=1)
         run_button = st.button("Run experiment", type="primary")
 
     if not run_button:
@@ -345,13 +345,6 @@ def main() -> None:
             except RuntimeError as exc:
                 st.warning(str(exc))
 
-    result_df = format_summary_table(summary, metrics)
-    st.subheader("Performance summary")
-    st.dataframe(result_df, use_container_width=True)
-
-    st.subheader("Runtime comparison")
-    st.pyplot(plot_runtime(summary), clear_figure=True)
-
     st.subheader("Clustering visualisations")
     # Add true labels as the first column
     cols = st.columns(len(summary) + 1)
@@ -361,6 +354,13 @@ def main() -> None:
     for col, (method, info) in zip(cols[1:], summary.items()):
         col.markdown(f"**{method}**")
         col.pyplot(plot_clusters(X, info["mapped"], method), clear_figure=True)
+
+    result_df = format_summary_table(summary, metrics)
+    st.subheader("Performance summary")
+    st.dataframe(result_df, use_container_width=True)
+
+    st.subheader("Runtime comparison")
+    st.pyplot(plot_runtime(summary), clear_figure=True)
 
     st.success("Done! Download the summary CSV below if needed.")
     csv_bytes = result_df.to_csv(index=False).encode("utf-8")
