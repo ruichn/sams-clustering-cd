@@ -1,0 +1,2 @@
+# System packages required for the Streamlit app
+# This file is used by Hugging Face Spaces to install system dependencies
