@@ -21,5 +21,5 @@ jobs:
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
-          git remote add hf https://HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/chnrui/sams-clustering-cd-demo
-          git push hf main --force
+          git remote add hf https://chnrui:$HF_TOKEN@huggingface.co/spaces/chnrui/sams-clustering-cd-demo
+          git push hf main
