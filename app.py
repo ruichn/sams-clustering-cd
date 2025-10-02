@@ -36,35 +36,45 @@ class DatasetConfig:
 
 def generate_dataset(cfg: DatasetConfig) -> Tuple[np.ndarray, np.ndarray]:
     if cfg.name == "Gaussian Blobs":
-        centers = cfg.n_clusters or max(3, cfg.n_features + 1)
         X, y = make_blobs(
             n_samples=cfg.n_samples,
-            centers=centers,
+            centers=cfg.n_clusters,
             n_features=cfg.n_features,
             cluster_std=cfg.cluster_std,
             random_state=cfg.random_state,
         )
     elif cfg.name == "Mixed Densities":
-        centers = cfg.n_clusters or max(3, cfg.n_features + 1)
-        n1 = cfg.n_samples // 2
-        n2 = cfg.n_samples - n1
-        X1, y1 = make_blobs(
-            n_samples=n1,
-            centers=centers,
-            n_features=cfg.n_features,
-            cluster_std=cfg.cluster_std,
-            random_state=cfg.random_state,
-        )
-        X2, y2 = make_blobs(
-            n_samples=n2,
-            centers=max(2, centers - 1),
-            n_features=cfg.n_features,
-            cluster_std=float(cfg.cluster_std) * 1.8,
-            random_state=cfg.random_state + 1,
-        )
-        y2 += y1.max() + 1
-        X = np.vstack([X1, X2])
-        y = np.concatenate([y1, y2])
+        # Create clusters with different standard deviations and unequal mixing proportions
+        n_clusters = cfg.n_clusters
+        rng = np.random.default_rng(cfg.random_state)
+
+        # Generate cluster centers
+        cluster_centers = rng.standard_normal((n_clusters, cfg.n_features)) * 10
+
+        # Generate different standard deviations for each cluster (range: 0.3x to 3.0x base std)
+        cluster_stds = cfg.cluster_std * (0.3 + 2.7 * rng.random(n_clusters))
+
+        # Generate unequal mixing proportions (lower alpha = more variation)
+        mixing_props = rng.dirichlet(np.ones(n_clusters) * 0.5)
+        cluster_sizes = (mixing_props * cfg.n_samples).astype(int)
+        # Adjust last cluster to ensure exact total
+        cluster_sizes[-1] = cfg.n_samples - cluster_sizes[:-1].sum()
+
+        # Generate samples for each cluster
+        X_list = []
+        y_list = []
+        for i in range(n_clusters):
+            if cluster_sizes[i] > 0:
+                X_cluster = rng.normal(
+                    loc=cluster_centers[i],
+                    scale=cluster_stds[i],
+                    size=(cluster_sizes[i], cfg.n_features)
+                )
+                X_list.append(X_cluster)
+                y_list.append(np.full(cluster_sizes[i], i))
+
+        X = np.vstack(X_list)
+        y = np.concatenate(y_list)
     elif cfg.name == "Two Moons":
         base_dim = max(2, cfg.n_features)
         X, y = make_moons(n_samples=cfg.n_samples, noise=cfg.noise or 0.1, random_state=cfg.random_state)
