@@ -1,3 +1,15 @@
+---
+title: SAMS Clustering Demo
+emoji: 🎯
+colorFrom: blue
+colorTo: purple
+sdk: streamlit
+sdk_version: "1.28.0"
+app_file: app.py
+pinned: false
+license: mit
+---
+
 # SAMS Clustering
 
 This repository contains a reference implementation of the Stochastic Approximation Mean-Shift (SAMS) clustering algorithm described in
